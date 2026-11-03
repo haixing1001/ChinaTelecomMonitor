@@ -159,15 +159,19 @@ def login_account(telecom, user, config, fail_counts):
             f"已连续失败{fail_time}次，为避免风控不再执行；"
             f"修正登录信息后，如需重新登录请删除配置中 loginFailTime 的 {phonenum} 键值"
         )
-    # 验证过的信任设备，免验证码
+    # 验证过的信任设备，免验证码；账号级配置优先于全局
     safe_device = {}
     if device_uid := (
-        os.environ.get("TELECOM_DEVICE_UID") or config.get("device_uid")
+        user.get("device_uid")
+        or os.environ.get("TELECOM_DEVICE_UID")
+        or config.get("device_uid")
     ):
         # iOS
         safe_device["device_uid"] = device_uid
     elif android_id := (
-        os.environ.get("TELECOM_ANDROID_ID") or config.get("android_id")
+        user.get("android_id")
+        or os.environ.get("TELECOM_ANDROID_ID")
+        or config.get("android_id")
     ):
         # Android
         safe_device["android_id"] = android_id
@@ -184,6 +188,15 @@ def login_account(telecom, user, config, fail_counts):
         print("自动登录：成功")
         return login_info
     fail_counts[phonenum] = fail_time + 1
+    if response.get("resultCode") == "3006":
+        raise RuntimeError(
+            "登录被设备校验拦截（3006），不是密码错误：该号码需要信任设备参数。"
+            "请抓包获取官方 App 登录请求里的 androidId（安卓）或 deviceUid（iOS），"
+            "填到该账号的 android_id / device_uid 字段"
+            "（或 TELECOM_ANDROID_ID / TELECOM_DEVICE_UID 环境变量）；"
+            f"已连续失败{fail_time + 1}次，满 {MAX_LOGIN_FAIL} 次暂停重试，"
+            f"修复后删除配置中 loginFailTime 的 {phonenum} 键值"
+        )
     raise RuntimeError(
         f"自动登录：已连续失败{fail_time + 1}次，{json.dumps(data, ensure_ascii=False)}"
     )

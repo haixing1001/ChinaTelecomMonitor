@@ -55,6 +55,35 @@ ql repo https://github.com/Cp0204/ChinaTelecomMonitor.git "telecom_monitor" "" "
 | `TELECOM_FLUX_PACKAGE` | `true` (默认)         | 推送流量包明细，`false` 则只推送基本信息                     |
 | `TELECOM_ONLY_WARN`    | `false` (默认)        | `true` 则只在该号码流量使用超过均匀范围时推送                |
 
+#### 登录报 3006（设备未信任）
+
+电信新增了信任设备校验：新设备/新环境首次登录会返回 `resultCode: 3006`，响应里带 `loginFailResult.verifyCode`。**这不是密码错误**，重试也不会成功。
+
+解决办法是登录时带上已验证设备的标识，二选一：
+
+- 安卓：`android_id`，抓包 `userLoginNormal` 请求里的 `fieldData.androidId`
+- iOS：`device_uid`，抓包 `fieldData.deviceUid`
+
+多账号时写在各自的账号对象里，每个号用自己的值（优先级高于全局）：
+
+```json
+{
+  "user": [
+    { "phonenum": "18912345678", "password": "123456", "android_id": "抓包得到的值" },
+    { "phonenum": "18987654321", "password": "654321", "device_uid": "抓包得到的值" }
+  ]
+}
+```
+
+单账号也可以继续用环境变量 `TELECOM_ANDROID_ID` / `TELECOM_DEVICE_UID`，或配置顶层的 `android_id` / `device_uid`。
+
+注意：
+
+- 抓包值是做过偏移的，不要用手机设置里的原始 Android ID，格式因人而异，原样抄。
+- 抓包时电信 App 报 SSL 错误/无网络，用 LSPosed 反抓包模块勾选电信；App 白屏则关 Zygisk。
+- 别在电信 App 里删除信任设备，删了要重新抓。
+- 连续失败满 5 次会暂停该号码重试；补上设备参数后，删除配置中 `loginFailTime` 里该号码的键值即可恢复。
+
 推送内容示例：
 
 ```txt
