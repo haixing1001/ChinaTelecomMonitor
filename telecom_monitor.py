@@ -77,11 +77,10 @@ def parse_users_from_env():
         line = line.strip()
         if not line:
             continue
-        if "----" in line:
-            phonenum, password = line.split("----", 1)
-        else:
-            # 兼容旧格式：11 位手机号 + 密码直接拼接
-            phonenum, password = line[:11], line[11:]
+        if "----" not in line:
+            print("⚠️ TELECOM_USER 存在格式错误的行（应为 手机号----密码），已忽略")
+            continue
+        phonenum, password = line.split("----", 1)
         users.append({"phonenum": phonenum.strip(), "password": password.strip()})
     return users
 
