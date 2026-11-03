@@ -43,7 +43,7 @@ ql repo https://github.com/Cp0204/ChinaTelecomMonitor.git "telecom_monitor" "" "
 }
 ```
 
-- `user` 为数组，一轮依次查询全部账号，**每个号码单独推送一条**，标题为 `【电信套餐用量监控】18912345678`。
+- `user` 为数组，一轮依次查询全部账号（默认每个号间隔 30 秒），**每个号码单独推送一条**，标题为 `【电信套餐用量监控】18912345678`。
 - `login_info`、`loginFailTime`、`summary` 均按手机号分别保存，各账号的 token 与登录失败次数互不影响；某个账号查询失败只影响它自己，其余账号继续查询和推送。
 - 兼容旧版单个 `user` 对象：首次运行自动迁移为数组，旧 token 继续复用（全局 `loginFailTime` 会重置为按号码计数）。
 
@@ -54,6 +54,7 @@ ql repo https://github.com/Cp0204/ChinaTelecomMonitor.git "telecom_monitor" "" "
 | `TELECOM_USER`         | `18912345678----123456` | 手机号与密码用 `----` 分隔；多个账号用换行或 `&` 分隔。设置后优先于配置文件，且不会写回配置文件 |
 | `TELECOM_FLUX_PACKAGE` | `true` (默认)         | 推送流量包明细，`false` 则只推送基本信息                     |
 | `TELECOM_ONLY_WARN`    | `false` (默认)        | `true` 则只在该号码流量使用超过均匀范围时推送                |
+| `TELECOM_ACCOUNT_DELAY` | `30` (默认)          | 多账号之间查询的间隔秒数，`0` 表示不等待                     |
 
 #### 登录报 3006（设备未信任）
 

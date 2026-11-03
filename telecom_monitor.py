@@ -14,6 +14,7 @@ cron: 0 20 * * *
 import os
 import sys
 import json
+import time
 import datetime
 import calendar
 
@@ -32,6 +33,10 @@ TELECOM_FLUX_PACKAGE = os.environ.get("TELECOM_FLUX_PACKAGE", "true").lower() !=
 TELECOM_ONLY_WARN = os.environ.get("TELECOM_ONLY_WARN", "false").lower() == "true"
 NOTIFY_TITLE = "【电信套餐用量监控】"
 MAX_LOGIN_FAIL = 5
+try:
+    ACCOUNT_DELAY = int(os.environ.get("TELECOM_ACCOUNT_DELAY", "30"))
+except ValueError:
+    ACCOUNT_DELAY = 30
 
 
 # 发送通知消息
@@ -348,6 +353,10 @@ def main():
 
     results = []
     for index, user in enumerate(users, 1):
+        if index > 1 and ACCOUNT_DELAY > 0:
+            print(f"⏳ 等待 {ACCOUNT_DELAY} 秒后查询下一个账号...")
+            print()
+            time.sleep(ACCOUNT_DELAY)
         phonenum = user["phonenum"]
         print(f"--------------- [{index}/{len(users)}] {phonenum} ---------------")
         try:
