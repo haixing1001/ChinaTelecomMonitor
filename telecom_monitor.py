@@ -70,14 +70,19 @@ def usage_status_icon(used, total):
 
 
 def parse_users_from_env():
-    """从 TELECOM_USER 解析账号，支持换行或 & 分隔多个「手机号+密码」"""
+    """从 TELECOM_USER 解析账号，格式「手机号----密码」，多账号用换行或 & 分隔"""
     raw = os.environ.get("TELECOM_USER", "")
     users = []
     for line in raw.replace("&", "\n").splitlines():
         line = line.strip()
         if not line:
             continue
-        users.append({"phonenum": line[:11], "password": line[11:]})
+        if "----" in line:
+            phonenum, password = line.split("----", 1)
+        else:
+            # 兼容旧格式：11 位手机号 + 密码直接拼接
+            phonenum, password = line[:11], line[11:]
+        users.append({"phonenum": phonenum.strip(), "password": password.strip()})
     return users
 
 
